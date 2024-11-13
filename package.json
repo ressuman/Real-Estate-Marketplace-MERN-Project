@@ -1,12 +1,21 @@
 {
   "name": "personal-project-48-mern-react-express-real-estate-marketplace-homeconnect-project",
+  "description": "A modern real estate marketplace application built with the MERN stack, featuring JWT authentication, Redux Toolkit, and advanced property search functionality.",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": [
+    "real-estate",
+    "marketplace",
+    "MERN",
+    "React",
+    "Express",
+    "MongoDB",
+    "JWT",
+    "Redux"
+  ],
   "author": "",
-  "license": "ISC",
-  "description": ""
+  "license": "ISC"
 }
