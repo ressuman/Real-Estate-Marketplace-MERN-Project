@@ -1,5 +1,6 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { responseHandler } from "../utils/response.js";
 
@@ -91,7 +92,82 @@ export const signin = async (req, res, next) => {
 
 export const google = async (req, res, next) => {
   try {
-  } catch (error) {}
+    // Validate input
+    if (!req.body.email || !req.body.name || !req.body.photo) {
+      const error = responseHandler(
+        400,
+        false,
+        "Missing required fields: email, name, or photo"
+      );
+      return next(error);
+    }
+
+    console.log("Incoming request body:", req.body);
+
+    // Check for existing user
+    const user = await User.findOne({ email: req.body.email });
+    if (user) {
+      console.log("User found, generating token...");
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+      const { password, ...rest } = user._doc;
+
+      const response = responseHandler(
+        200,
+        true,
+        "User authenticated successfully",
+        1,
+        {
+          ...rest,
+          token,
+        }
+      );
+      return res
+        .cookie("access_token", token, { httpOnly: true })
+        .status(response.statusCode)
+        .json(response);
+    }
+
+    // Generate a secure random password
+    const generatedPassword = crypto.randomBytes(16).toString("hex");
+    console.log("Generated secure password:", generatedPassword);
+
+    const hashedPassword = bcrypt.hashSync(generatedPassword, 10);
+
+    // Create new user
+    const newUser = new User({
+      username:
+        req.body.name.split(" ").join("").toLowerCase() +
+        Math.random().toString(36).slice(-4),
+      email: req.body.email,
+      password: hashedPassword,
+      avatar: req.body.photo,
+    });
+
+    await newUser.save();
+    console.log("New user saved successfully:", newUser);
+
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
+    const { password, ...rest } = newUser._doc;
+
+    const response = responseHandler(
+      200,
+      true,
+      "New user created successfully",
+      1,
+      {
+        ...rest,
+        token,
+      }
+    );
+    return res
+      .cookie("access_token", token, { httpOnly: true })
+      .status(response.statusCode)
+      .json(response);
+  } catch (error) {
+    console.error("Error in Google authentication:", error);
+    const response = responseHandler(500, false, "Internal Server Error");
+    return next(response);
+  }
 };
 
 export const signout = async (req, res, next) => {

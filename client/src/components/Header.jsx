@@ -1,16 +1,44 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
+import { useSelector } from "react-redux";
+import { useState } from "react";
 
 export default function Header() {
+  const { currentUser } = useSelector((state) => state.user);
+
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   const urlParams = new URLSearchParams(window.location.search);
+  //   urlParams.set("searchTerm", searchTerm);
+  //   const searchQuery = urlParams.toString();
+  //   navigate(`/search?${searchQuery}`);
+  // };
+
+  // useEffect(() => {
+  //   const urlParams = new URLSearchParams(location.search);
+  //   const searchTermFromUrl = urlParams.get("searchTerm");
+  //   if (searchTermFromUrl) {
+  //     setSearchTerm(searchTermFromUrl);
+  //   }
+  // }, [location.search]);
+
   return (
     <header className="bg-slate-200 shadow-md">
       <div className="flex justify-between items-center max-w-6xl mx-auto p-3">
+        {/* Logo */}
         <Link to="/">
           <h1 className="font-bold text-sm md:text-xl flex flex-wrap">
             <span className="text-slate-500">AbodeConnect</span>
             <span className="text-slate-700">Estate</span>
           </h1>
         </Link>
+
+        {/* Search Form */}
         <form
           //onSubmit={handleSubmit}
           className="bg-slate-100 p-3 rounded-lg flex items-center"
@@ -19,36 +47,48 @@ export default function Header() {
             type="text"
             placeholder="Search..."
             className="bg-transparent focus:outline-none w-24 md:w-64"
+            aria-label="Search"
             //value={searchTerm}
             //onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <button>
+          <button type="submit" aria-label="Submit search">
             <FaSearch className="text-slate-600" />
           </button>
         </form>
-        <ul className="flex gap-4">
-          <Link to="/">
-            <li className="hidden md:inline text-slate-700 hover:underline">
+
+        {/* Navigation Links */}
+        <ul className="flex gap-4 items-center">
+          <li>
+            <Link
+              to="/"
+              className="hidden sm:inline text-slate-700 hover:underline"
+            >
               Home
-            </li>
-          </Link>
-          <Link to="/about">
-            <li className="hidden md:inline text-slate-700 hover:underline">
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/about"
+              className="hidden sm:inline text-slate-700 hover:underline"
+            >
               About
-            </li>
-          </Link>
-          <Link to="/sign-in">
-            {/* {currentUser ? (
-              <img
-                className="rounded-full h-7 w-7 object-cover"
-                src={currentUser.avatar}
-                alt="profile"
-              />
+            </Link>
+          </li>
+          <li>
+            {currentUser ? (
+              <Link to="/profile">
+                <img
+                  className="rounded-full h-7 w-7 object-cover"
+                  src={currentUser?.data?.avatar}
+                  alt="Profile"
+                />
+              </Link>
             ) : (
-              <li className=" text-slate-700 hover:underline"> Sign in</li>
-            )} */}
-            <li className=" text-slate-700 hover:underline"> Sign in</li>
-          </Link>
+              <Link to="/profile" className="text-slate-700 hover:underline">
+                Sign in
+              </Link>
+            )}
+          </li>
         </ul>
       </div>
     </header>
