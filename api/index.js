@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 //import swaggerUi from "swagger-ui-express";
 import dotenv from "dotenv";
 
@@ -61,6 +62,8 @@ app.use(cors());
 
 app.use(express.json());
 
+app.use(cookieParser());
+
 // Welcome message of the application
 app.get("/api", (req, res) => {
   res.status(200).json({
@@ -88,8 +91,8 @@ app.get("/api", (req, res) => {
 // );
 
 // Routes Handlers
-app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/user", userRoutes);
 
 // Server Running
 app.listen(PORT, HOST, () => {
