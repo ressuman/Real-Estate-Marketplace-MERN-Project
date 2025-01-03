@@ -172,5 +172,21 @@ export const google = async (req, res, next) => {
 
 export const signout = async (req, res, next) => {
   try {
-  } catch (error) {}
+    // Clear the access token cookie
+    res.clearCookie("access_token", { httpOnly: true, secure: true });
+
+    // Send a successful logout response
+    res
+      .status(200)
+      .json(
+        responseHandler(200, true, "User has been logged out successfully.")
+      );
+  } catch (error) {
+    // Handle any unexpected errors
+    next(
+      responseHandler(500, false, "An error occurred while logging out.", 0, {
+        error,
+      })
+    );
+  }
 };

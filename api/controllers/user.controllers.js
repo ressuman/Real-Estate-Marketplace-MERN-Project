@@ -57,6 +57,46 @@ export const updateUser = async (req, res, next) => {
   }
 };
 
+export const deleteUser = async (req, res, next) => {
+  try {
+    // Check if the authenticated user matches the ID being deleted
+    if (req.user.id !== req.params.id) {
+      return next(
+        responseHandler(401, false, "You can only delete your own account!")
+      );
+    }
+
+    // Find and delete the user
+    const deletedUser = await User.findByIdAndDelete(req.params.id);
+
+    // If user not found
+    if (!deletedUser) {
+      return next(
+        responseHandler(404, false, "User not found. Cannot delete account.")
+      );
+    }
+
+    // Clear authentication cookie
+    res.clearCookie("access_token");
+
+    // Send success response
+    res
+      .status(200)
+      .json(responseHandler(200, true, "User has been deleted successfully!"));
+  } catch (error) {
+    // Handle unexpected errors
+    next(
+      responseHandler(
+        500,
+        false,
+        "An error occurred while deleting the user.",
+        0,
+        { error }
+      )
+    );
+  }
+};
+
 export const updateProfilePic = async (req, res, next) => {
   try {
     const { userId, image } = req.body;
