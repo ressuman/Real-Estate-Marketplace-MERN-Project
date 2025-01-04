@@ -13,6 +13,7 @@ const CSS_URL =
 // Routes
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import listingRoutes from "./routes/listing.routes.js";
 
 // Database Connection
 mongoose
@@ -93,6 +94,7 @@ app.get("/api", (req, res) => {
 // Routes Handlers
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
+app.use("/api/v1/listings", listingRoutes);
 
 // Server Running
 app.listen(PORT, HOST, () => {
