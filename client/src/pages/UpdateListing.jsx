@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getUnitText, titleCase } from "../helper/unit";
 
-export default function CreateListing() {
+export default function UpdateListing() {
   const { currentUser } = useSelector((state) => state.user);
+
   const navigate = useNavigate();
+  const params = useParams(); // Get listingId from URL params
 
   const [files, setFiles] = useState([]);
   const [formData, setFormData] = useState({
@@ -231,16 +233,19 @@ export default function CreateListing() {
       setError(false);
 
       // API call to create listing
-      const res = await fetch("/api/v1/listings/create-listing", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...formData,
-          userRef: currentUser._id,
-        }),
-      });
+      const res = await fetch(
+        `/api/v1/listings/update-listing/${params.listingId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...formData,
+            userRef: currentUser._id,
+          }),
+        }
+      );
 
       const data = await res.json();
 
@@ -262,10 +267,45 @@ export default function CreateListing() {
     }
   };
 
+  useEffect(() => {
+    const fetchListing = async () => {
+      try {
+        const listingId = params.listingId;
+
+        if (!listingId) {
+          console.error("Listing ID is missing.");
+          return;
+        }
+
+        const res = await fetch(`/api/v1/listings/get-listing/${listingId}`);
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          console.error(`Error fetching listing: ${errorData.message}`);
+          return;
+        }
+
+        const data = await res.json();
+
+        if (data.success === false) {
+          console.error(`Error fetching listing: ${data.message}`);
+          return;
+        }
+
+        // Set form data if successful
+        setFormData(data.data || {});
+      } catch (error) {
+        console.error(`Unexpected error fetching listing: ${error.message}`);
+      }
+    };
+
+    fetchListing();
+  }, [params.listingId]);
+
   return (
     <main className="p-3 max-w-5xl mx-auto">
       <h1 className="text-3xl font-semibold text-center my-7">
-        Create a Listing
+        Update a Listing
       </h1>
       <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4">
         <div className="flex flex-col gap-4 flex-1">
@@ -517,7 +557,7 @@ export default function CreateListing() {
             type="submit"
             className="p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80"
           >
-            {loading ? "Creating..." : "Create Listing"}
+            {loading ? "Updating..." : "Update listing"}
           </button>
           {error && <p className="text-red-700 text-sm text-center">{error}</p>}
         </div>

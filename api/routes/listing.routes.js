@@ -14,7 +14,7 @@ const router = express.Router();
 
 router.post("/create-listing", verifyToken, createListing);
 
-router.post("/update-listing/:id", verifyToken, updateListing);
+router.put("/update-listing/:id", verifyToken, updateListing);
 
 router.delete("/delete-listing/:id", verifyToken, deleteListing);
 

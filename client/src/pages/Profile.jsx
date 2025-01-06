@@ -24,7 +24,8 @@ export default function Profile() {
   const [fileUploadError, setFileUploadError] = useState(null);
   const [formData, setFormData] = useState({});
   const [updateSuccess, setUpdateSuccess] = useState(false);
-  //console.log(formData);
+  const [showListingsError, setShowListingsError] = useState(false);
+  const [userListings, setUserListings] = useState([]);
 
   // Upload file to Cloudinary
   const handleFileUpload = async (file) => {
@@ -159,43 +160,49 @@ export default function Profile() {
     }
   };
 
-  // const handleShowListings = async () => {
-  //   setShowListingsError(false);
-  //   try {
-  //     const response = await fetch(`/api/user/listings/${currentUser._id}`);
-  //     const data = await response.json();
-  //     if (!data.success) throw new Error(data.message);
+  const handleShowListings = async () => {
+    setShowListingsError(false);
+    try {
+      const response = await fetch(
+        `/api/v1/user/listings/user-listings/${currentUser._id}`
+      );
+      const data = await response.json();
+      if (!data.success) throw new Error(data.message);
 
-  //     setUserListings(data.listings);
-  //   } catch (error) {
-  //     setShowListingsError(true);
-  //   }
-  // };
+      setUserListings(data.data);
+    } catch (error) {
+      setShowListingsError(true);
+      console.log("Failed to show listings:", error.message);
+    }
+  };
 
-  // const handleListingDelete = async (listingId) => {
-  //   try {
-  //     const response = await fetch(`/api/listing/delete/${listingId}`, { method: "DELETE" });
-  //     const data = await response.json();
-  //     if (!data.success) throw new Error(data.message);
+  const handleListingDelete = async (listingId) => {
+    try {
+      const response = await fetch(
+        `/api/v1/listings/delete-listing/${listingId}`,
+        { method: "DELETE" }
+      );
+      const data = await response.json();
+      if (!data.success) throw new Error(data.message);
 
-  //     setUserListings((prev) => prev.filter((listing) => listing._id !== listingId));
-  //   } catch (error) {
-  //     console.error("Failed to delete listing:", error.message);
-  //   }
-  // };
+      setUserListings((prev) =>
+        prev.filter((listing) => listing._id !== listingId)
+      );
+    } catch (error) {
+      console.error("Failed to delete listing:", error.message);
+    }
+  };
 
   return (
     <div className="p-3 max-w-lg mx-auto">
       <h1 className="text-3xl font-semibold text-center my-7">Profile</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
-          //onChange={handleFileChange}
           onChange={(e) => setFile(e.target.files[0])}
           type="file"
           ref={fileRef}
           hidden
           accept="image/*"
-          //onChange={(e) => setFile(e.target.files[0])}
         />
         <img
           onClick={() => fileRef.current.click()}
@@ -287,15 +294,15 @@ export default function Profile() {
         {updateSuccess ? "User is updated successfully!" : ""}
       </p>
       <button
-        // onClick={handleShowListings}
-        className="text-green-700 w-full"
+        onClick={handleShowListings}
+        className="text-green-700 w-full hover:underline"
       >
         Show Listings
       </button>
-      <p className="text-red-700 mt-5">
-        {/* {showListingsError && "Error showing listings"} */}
+      <p className="text-red-700 mt-5 text-center">
+        {showListingsError && "Error showing listings"}
       </p>
-      {/* {userListings && userListings.length > 0 && (
+      {userListings && userListings.length > 0 && (
         <div className="flex flex-col gap-4">
           <h1 className="text-center mt-7 text-2xl font-semibold">
             Your Listings
@@ -309,90 +316,32 @@ export default function Profile() {
                 <img
                   src={listing.imageUrls?.[0] || "/default-listing.png"}
                   alt="listing cover"
-                  className="h-16 w-16 object-contain"
+                  className="h-20 w-[7.5rem] object-cover rounded-lg"
                 />
               </Link>
               <Link
-                className="text-slate-700 font-semibold hover:underline truncate flex-1"
                 to={`/listing/${listing._id}`}
+                className="text-slate-700 font-semibold hover:underline truncate flex-1"
               >
-                <p>{listing.name}</p>
+                <p>{listing.title}</p>
               </Link>
-              <div className="flex flex-col item-center">
+              <div className="flex flex-col items-center">
                 <button
                   onClick={() => handleListingDelete(listing._id)}
-                  className="text-red-700 uppercase"
+                  className="text-red-700 uppercase hover:opacity-75 "
                 >
                   Delete
                 </button>
                 <Link to={`/update-listing/${listing._id}`}>
-                  <button className="text-green-700 uppercase">Edit</button>
+                  <button className="text-green-700 uppercase hover:opacity-75">
+                    Edit
+                  </button>
                 </Link>
               </div>
             </div>
           ))}
         </div>
-      )} */}
+      )}
     </div>
   );
 }
-
-// <div className="p-3 max-w-lg mx-auto">
-//   <h1 className="text-3xl font-semibold text-center my-7">Profile</h1>
-//   <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-//     <input
-//       type="file"
-//       ref={fileRef}
-//       hidden
-//       accept="image/*"
-//       onChange={(e) => setFile(e.target.files[0])}
-//     />
-//     <img
-//       onClick={() => fileRef.current.click()}
-//       src={formData.avatar || currentUser.avatar}
-//       alt="profile"
-//       className="rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2"
-//     />
-//     <p className="text-sm self-center">
-//       {fileUploadError && (
-//         <span className="text-red-700">{fileUploadError}</span>
-//       )}
-//       {filePerc > 0 && filePerc < 100 && (
-//         <span className="text-slate-700">{`Uploading ${filePerc}%`}</span>
-//       )}
-//       {filePerc === 100 && (
-//         <span className="text-green-700">Image successfully uploaded!</span>
-//       )}
-//     </p>
-//     <input
-//       type="text"
-//       id="username"
-//       defaultValue={currentUser.username}
-//       onChange={handleChange}
-//       className="border p-3 rounded-lg"
-//       placeholder="Username"
-//     />
-//     <input
-//       type="email"
-//       id="email"
-//       defaultValue={currentUser.email}
-//       onChange={handleChange}
-//       className="border p-3 rounded-lg"
-//       placeholder="Email"
-//     />
-//     <input
-//       type="password"
-//       id="password"
-//       onChange={handleChange}
-//       className="border p-3 rounded-lg"
-//       placeholder="Password"
-//     />
-//     <button
-//       type="submit"
-//       disabled={loading}
-//       className="bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80"
-//     >
-//       {loading ? "Loading..." : "Update"}
-//     </button>
-//   </form>
-// </div>;

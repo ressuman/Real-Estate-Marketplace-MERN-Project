@@ -8,6 +8,7 @@ import Notfound from "./pages/Notfound";
 import Header from "./components/Header";
 import PrivateRoute from "./components/PrivateRoute";
 import CreateListing from "./pages/CreateListing";
+import UpdateListing from "./pages/UpdateListing";
 
 function App() {
   return (
@@ -26,10 +27,10 @@ function App() {
         <Route element={<PrivateRoute />}>
           <Route path="/profile" element={<Profile />} />
           <Route path="/create-listing" element={<CreateListing />} />
-          {/* <Route
+          <Route
             path="/update-listing/:listingId"
             element={<UpdateListing />}
-          /> */}
+          />
         </Route>
       </Routes>
     </BrowserRouter>
