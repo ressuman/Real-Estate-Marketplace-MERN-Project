@@ -6,7 +6,7 @@ export const createListing = async (req, res, next) => {
   try {
     // Validate required fields explicitly if not handled adequately in the model
     const requiredFields = [
-      "name",
+      "title",
       "description",
       "address",
       "regularPrice",
@@ -34,7 +34,7 @@ export const createListing = async (req, res, next) => {
     }
 
     const {
-      name,
+      title,
       description,
       address,
       regularPrice,
@@ -49,6 +49,36 @@ export const createListing = async (req, res, next) => {
       imageUrls,
     } = req.body;
 
+    const allowedPropertyTypes = [
+      "apartment",
+      "house",
+      "studio",
+      "condo",
+      "villa",
+      "duplex",
+      "townhouse",
+    ];
+    const allowedTransactionTypes = [
+      "sale",
+      "rent",
+      "lease",
+      "short-term",
+      "long-term",
+    ];
+
+    // Validate propertyType
+    if (!propertyType || !allowedPropertyTypes.includes(propertyType)) {
+      return next(responseHandler(400, false, "Invalid property type."));
+    }
+
+    // Validate transactionType
+    if (
+      !transactionType ||
+      !allowedTransactionTypes.includes(transactionType)
+    ) {
+      return next(responseHandler(400, false, "Invalid transaction type."));
+    }
+
     // Validate discount price logic
     if (discountPrice >= regularPrice) {
       return next(
@@ -61,7 +91,7 @@ export const createListing = async (req, res, next) => {
     }
 
     const listing = await Listing.create({
-      name,
+      title,
       description,
       address,
       regularPrice,

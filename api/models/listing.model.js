@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 
 const listingSchema = new mongoose.Schema(
   {
-    name: {
+    title: {
       type: String,
-      required: [true, "Listing name is required."],
+      required: [true, "Listing title is required."],
       trim: true,
     },
     description: {

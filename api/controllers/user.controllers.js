@@ -1,5 +1,6 @@
 import cloudinary from "cloudinary";
 import User from "../models/user.model.js";
+import Listing from "../models/listing.model.js";
 import { responseHandler } from "../utils/response.js";
 import bcrypt from "bcryptjs";
 
@@ -93,6 +94,70 @@ export const deleteUser = async (req, res, next) => {
         0,
         { error }
       )
+    );
+  }
+};
+
+export const getUserListings = async (req, res, next) => {
+  try {
+    // Validate that the logged-in user is requesting their own listings
+    if (req.user.id !== req.params.id) {
+      return next(
+        responseHandler(401, false, "You can only view your own listings!")
+      );
+    }
+
+    // Fetch user listings
+    const listings = await Listing.find({ userRef: req.params.id });
+
+    if (!listings || listings.length === 0) {
+      return next(
+        responseHandler(404, false, "No listings found for the user.")
+      );
+    }
+
+    res
+      .status(200)
+      .json(
+        responseHandler(
+          200,
+          true,
+          "User listings retrieved successfully!",
+          listings.length,
+          listings
+        )
+      );
+  } catch (error) {
+    next(
+      responseHandler(500, false, "Failed to retrieve listings.", 0, {
+        error: error.message,
+      })
+    );
+  }
+};
+
+export const getUser = async (req, res, next) => {
+  try {
+    // Fetch user details
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return next(responseHandler(404, false, "User not found!"));
+    }
+
+    // Exclude sensitive data
+    const { password, ...rest } = user._doc;
+
+    res
+      .status(200)
+      .json(
+        responseHandler(200, true, "User retrieved successfully!", 1, rest)
+      );
+  } catch (error) {
+    next(
+      responseHandler(500, false, "Failed to retrieve user.", 0, {
+        error: error.message,
+      })
     );
   }
 };
