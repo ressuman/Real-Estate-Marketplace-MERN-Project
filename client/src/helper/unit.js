@@ -15,6 +15,23 @@ export const getUnitText = (transactionType) => {
   }
 };
 
+export const getTransactionUnit = (transactionType) => {
+  switch (transactionType) {
+    case "rent":
+      return "/ month";
+    case "lease":
+      return "/ 6 months";
+    case "short-term":
+      return "/ week";
+    case "long-term":
+      return "/ year";
+    case "sale":
+      return ""; // No unit for sale
+    default:
+      return "";
+  }
+};
+
 export function titleCase(input) {
   return input
     .split(" ")
