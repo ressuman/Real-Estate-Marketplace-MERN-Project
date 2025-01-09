@@ -22,6 +22,7 @@ import {
   FaWarehouse,
 } from "react-icons/fa";
 import { getTransactionUnit, titleCase } from "../helper/unit";
+import Contact from "../components/Contact";
 
 export default function Listing() {
   const { currentUser } = useSelector((state) => state.user);
@@ -260,7 +261,9 @@ export default function Listing() {
                 Contact Landlord
               </button>
             )}
-            {/* {contact && <Contact listing={listing} />} */}
+            {contact && (
+              <Contact listing={listing} onClose={() => setContact(false)} />
+            )}
           </div>
         </div>
       )}

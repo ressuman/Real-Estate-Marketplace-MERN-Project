@@ -27,6 +27,9 @@ export default function Signin() {
 
     try {
       dispatch(signInStart());
+
+      // Log formData for debugging
+      console.log("FormData:", formData);
       const res = await fetch("/api/v1/auth/signin", {
         method: "POST",
         headers: {
@@ -35,6 +38,8 @@ export default function Signin() {
         body: JSON.stringify(formData),
       });
 
+      console.log("API Response Status:", res.status);
+
       if (!res.ok) {
         const errorData = await res.json();
         dispatch(signInFailure(errorData.message));
@@ -42,15 +47,19 @@ export default function Signin() {
       }
 
       const data = await res.json();
+
+      console.log("API Response Data:", data);
       if (!data.success) {
         dispatch(signInFailure(data.message));
         return;
       }
 
       // Success case
-      dispatch(signInSuccess(data));
+      dispatch(signInSuccess({ data: data.data }));
+      console.log("User successfully signed in:", data.data);
       navigate("/");
     } catch (error) {
+      console.error("Sign-In Error:", error);
       dispatch(signInFailure(error.message));
     }
   };

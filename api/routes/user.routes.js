@@ -17,6 +17,7 @@ router.delete("/delete-user/:id", verifyToken, deleteUser);
 
 router.get("/listings/user-listings/:id", verifyToken, getUserListings);
 
-router.get("current-user/:id", verifyToken, getUser);
+// router.get("/current-user/:id", verifyToken, getUser);
+router.get("/current-user/:id", getUser);
 
 export default router;

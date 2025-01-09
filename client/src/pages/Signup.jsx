@@ -21,6 +21,10 @@ export default function Signup() {
 
     try {
       setIsLoading(true);
+
+      // Log formData for debugging
+      console.log("FormData:", formData);
+
       const res = await fetch("/api/v1/auth/signup", {
         method: "POST",
         headers: {
@@ -28,6 +32,8 @@ export default function Signup() {
         },
         body: JSON.stringify(formData),
       });
+
+      console.log("API Response Status:", res.status);
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -37,6 +43,7 @@ export default function Signup() {
       }
 
       const data = await res.json();
+      console.log("API Response Data:", data);
       if (!data.success) {
         setError(data.message);
         setIsLoading(false);
@@ -44,12 +51,14 @@ export default function Signup() {
       }
 
       // Success case
+      console.log("User successfully signed up:", data.data);
       setIsLoading(false);
       setError(null);
       navigate("/sign-in");
     } catch (error) {
-      setIsLoading(false);
+      console.error("Sign-Up Error:", error);
       setError(error.message || "Network error occurred");
+      setIsLoading(false);
     }
   };
 

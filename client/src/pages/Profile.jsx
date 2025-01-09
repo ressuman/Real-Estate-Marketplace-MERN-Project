@@ -173,6 +173,7 @@ export default function Profile() {
     } catch (error) {
       setShowListingsError(true);
       console.log("Failed to show listings:", error.message);
+      console.log(error.message);
     }
   };
 
@@ -206,7 +207,7 @@ export default function Profile() {
         />
         <img
           onClick={() => fileRef.current.click()}
-          src={formData.avatar || currentUser.avatar || "/default-avatar.png"}
+          src={formData.avatar || currentUser?.avatar || "/default-avatar.png"}
           alt="profile"
           className="rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2"
         />
@@ -238,7 +239,7 @@ export default function Profile() {
         <input
           type="text"
           placeholder="Username"
-          defaultValue={currentUser.username}
+          defaultValue={currentUser?.username}
           id="username"
           className="border p-3 rounded-lg"
           onChange={handleChange}
@@ -247,7 +248,7 @@ export default function Profile() {
           type="email"
           placeholder="Email"
           id="email"
-          defaultValue={currentUser.email}
+          defaultValue={currentUser?.email}
           className="border p-3 rounded-lg"
           onChange={handleChange}
         />
