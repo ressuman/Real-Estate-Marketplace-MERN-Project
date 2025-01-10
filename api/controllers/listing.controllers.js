@@ -228,31 +228,101 @@ export const getListing = async (req, res, next) => {
   }
 };
 
+// export const getListings = async (req, res, next) => {
+//   try {
+//     const limit = Math.max(1, parseInt(req.query.limit) || 9); // Default to 9, min 1
+//     const startIndex = Math.max(0, parseInt(req.query.startIndex) || 0); // Default to 0, min 0
+
+//     const query = {
+//       name: {
+//         $regex: req.query.searchTerm || "",
+//         $options: "i",
+//       },
+//       ...(req.query.offer
+//         ? {
+//             offer: req.query.offer === "true",
+//           }
+//         : {}),
+//       ...(req.query.furnished
+//         ? {
+//             furnished: req.query.furnished === "true",
+//           }
+//         : {}),
+//       ...(req.query.parking
+//         ? {
+//             parking: req.query.parking === "true",
+//           }
+//         : {}),
+//       ...(req.query.transactionType && req.query.transactionType !== "all"
+//         ? { transactionType: req.query.transactionType }
+//         : {
+//             transactionType: {
+//               $in: ["sale", "rent", "lease", "short-term", "long-term"],
+//             },
+//           }),
+//       ...(req.query.propertyType && req.query.propertyType !== "all"
+//         ? { propertyType: req.query.propertyType }
+//         : {
+//             propertyType: {
+//               $in: [
+//                 "apartment",
+//                 "house",
+//                 "studio",
+//                 "condo",
+//                 "villa",
+//                 "duplex",
+//                 "townhouse",
+//               ],
+//             },
+//           }),
+//     };
+
+//     const sortField = req.query.sort || "createdAt";
+//     const sortOrder = req.query.order === "asc" ? 1 : -1;
+
+//     const [listings, totalCount] = await Promise.all([
+//       Listing.find(query)
+//         .sort({ [sortField]: sortOrder })
+//         .limit(limit)
+//         .skip(startIndex),
+//       Listing.countDocuments(query),
+//     ]);
+
+//     res
+//       .status(200)
+//       .json(
+//         responseHandler(
+//           200,
+//           true,
+//           "Listings retrieved successfully!",
+//           totalCount,
+//           listings
+//         )
+//       );
+//   } catch (error) {
+//     if (error instanceof mongoose.Error.CastError) {
+//       return next(
+//         responseHandler(400, false, "Invalid query parameter format.")
+//       );
+//     }
+//     next(error);
+//   }
+// };
+
 export const getListings = async (req, res, next) => {
   try {
     const limit = Math.max(1, parseInt(req.query.limit) || 9); // Default to 9, min 1
     const startIndex = Math.max(0, parseInt(req.query.startIndex) || 0); // Default to 0, min 0
 
+    // Build the query object dynamically
     const query = {
       name: {
         $regex: req.query.searchTerm || "",
         $options: "i",
       },
-      ...(req.query.offer
-        ? {
-            offer: req.query.offer === "true",
-          }
-        : {}),
-      ...(req.query.furnished
-        ? {
-            furnished: req.query.furnished === "true",
-          }
-        : {}),
-      ...(req.query.parking
-        ? {
-            parking: req.query.parking === "true",
-          }
-        : {}),
+      ...(req.query.offer === "true" ? { offer: true } : {}),
+      ...(req.query.furnished === "true" ? { furnished: true } : {}),
+      ...(req.query.parking === "true" ? { parking: true } : {}),
       ...(req.query.transactionType && req.query.transactionType !== "all"
         ? { transactionType: req.query.transactionType }
         : {
@@ -277,9 +347,11 @@ export const getListings = async (req, res, next) => {
           }),
     };
 
+    // Sorting logic
     const sortField = req.query.sort || "createdAt";
     const sortOrder = req.query.order === "asc" ? 1 : -1;
 
+    // Fetch listings and total count concurrently
     const [listings, totalCount] = await Promise.all([
       Listing.find(query)
         .sort({ [sortField]: sortOrder })
@@ -300,11 +372,13 @@ export const getListings = async (req, res, next) => {
         )
       );
   } catch (error) {
+    // Handle specific MongoDB errors
     if (error instanceof mongoose.Error.CastError) {
       return next(
         responseHandler(400, false, "Invalid query parameter format.")
       );
     }
+    // Pass other errors to the global error handler
     next(error);
   }
 };
