@@ -54,11 +54,8 @@ export default function ListingItem({ listing }) {
         onClick={(e) => !_id && e.preventDefault()}
       >
         <img
-          // src={
-          //   imageUrls[0] ||
-          //   "https://53.fs1.hubspotusercontent-na1.net/hub/53/hubfs/Sales_Blog/real-estate-business-compressor.jpg?width=595&height=400&name=real-estate-business-compressor.jpg"
-          // }
           src={
+            imageUrls[0] ||
             "https://53.fs1.hubspotusercontent-na1.net/hub/53/hubfs/Sales_Blog/real-estate-business-compressor.jpg?width=595&height=400&name=real-estate-business-compressor.jpg"
           }
           alt={name}
