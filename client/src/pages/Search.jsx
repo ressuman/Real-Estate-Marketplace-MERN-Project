@@ -9,7 +9,6 @@ export default function Search() {
   const [loading, setLoading] = useState(false);
   const [listings, setListings] = useState([]);
   const [showMore, setShowMore] = useState(false);
-  console.log("Listings:", listings);
 
   const [searchQuery, setSearchQuery] = useState({
     searchTerm: "",
@@ -103,7 +102,7 @@ export default function Search() {
     const fetchListings = async () => {
       try {
         setLoading(true);
-        //setShowMore(false);
+        setShowMore(false);
 
         const searchQuery = urlParams.toString();
         const response = await fetch(
@@ -115,10 +114,10 @@ export default function Search() {
         }
 
         const data = await response.json();
+        const res = data.data;
 
-        //setShowMore(data.length > 8);
-        setListings(data.data);
-        console.log("Listings:", data.data);
+        setShowMore(res.length > 8);
+        setListings(res);
       } catch (error) {
         console.error("Error fetching listings:", error);
       } finally {
@@ -155,39 +154,43 @@ export default function Search() {
     navigate(`/search?${searchQueryParams}`);
   };
 
-  // const onShowMoreClick = async () => {
-  //   try {
-  //     const numberOfListings = listings.length;
-  //     const startIndex = numberOfListings;
+  const onShowMoreClick = async () => {
+    try {
+      const numberOfListings = listings.length;
+      const startIndex = numberOfListings;
 
-  //     // Add startIndex to existing search parameters
-  //     const urlParams = new URLSearchParams(location.search);
-  //     urlParams.set("startIndex", startIndex);
+      // Add startIndex to existing search parameters
+      const urlParams = new URLSearchParams(location.search);
+      urlParams.set("startIndex", startIndex);
 
-  //     const searchQuery = urlParams.toString();
-  //     const response = await fetch(`/api/listing/get?${searchQuery}`);
+      const searchQuery = urlParams.toString();
+      const response = await fetch(
+        `/api/v1/listings/get-all-listings?${searchQuery}`
+      );
 
-  //     if (!response.ok) {
-  //       throw new Error(
-  //         `Failed to fetch additional listings: ${response.status}`
-  //       );
-  //     }
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch additional listings: ${response.status}`
+        );
+      }
 
-  //     const data = await response.json();
+      const data = await response.json();
+      const newListings = data.data;
 
-  //     // Determine if "Show More" should remain visible
-  //     setShowMore(data.length >= 9);
+      // Update "Show More" button visibility based on returned results
+      // Determine if "Show More" should remain visible
+      setShowMore(newListings.length >= 9);
 
-  //     // Append new listings to the existing list
-  //     setListings((prevListings) => [...prevListings, ...data]);
-  //   } catch (error) {
-  //     console.error("Error fetching more listings:", error);
-  //   }
-  // };
+      // Append new listings to the existing list
+      setListings((prevListings) => [...prevListings, ...newListings]);
+    } catch (error) {
+      console.error("Error fetching more listings:", error);
+    }
+  };
 
   return (
-    <div className="flex flex-col md:flex-row">
-      <div className="p-7 border-b-2 md:border-r-2 md:min-h-screen w-[20%] md:w-[85%] lg:w-2/6">
+    <div className="flex flex-col md:flex-row w-full">
+      <div className="p-7 border-b-2 md:border-r-2 md:min-h-screen w-full md:w-[40%] lg:w-[30%]">
         <form onSubmit={handleSubmit} className="flex flex-col gap-8">
           {/* Search Term */}
           <div className="flex items-center gap-2">
@@ -331,7 +334,7 @@ export default function Search() {
       </div>
 
       {/* Listings Section */}
-      <div className="w-full">
+      <div className="w-full md:w-[60%] lg:w-[70%]">
         <h1 className="text-3xl font-semibold border-b p-3 text-slate-700 mt-5">
           Listing results:
         </h1>
@@ -352,7 +355,7 @@ export default function Search() {
           {showMore && (
             <button
               type="button"
-              //onClick={onShowMoreClick}
+              onClick={onShowMoreClick}
               className="text-green-700 hover:underline p-7 text-center w-full"
             >
               Show more

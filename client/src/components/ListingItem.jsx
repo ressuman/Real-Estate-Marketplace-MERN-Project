@@ -48,7 +48,7 @@ export default function ListingItem({ listing }) {
   };
 
   return (
-    <div className="bg-white shadow-md hover:shadow-lg transition-shadow overflow-hidden rounded-lg w-full md:w-[330px]">
+    <div className="bg-white shadow-md hover:shadow-lg transition-shadow overflow-hidden rounded-lg w-full md:w-[48%] lg:w-[31%] ">
       <Link
         to={_id ? `/listing/${_id}` : "#"}
         onClick={(e) => !_id && e.preventDefault()}
