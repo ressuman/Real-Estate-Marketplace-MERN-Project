@@ -17,12 +17,51 @@ export default function Profile() {
   const fileRef = useRef(null);
 
   const { currentUser, loading, error } = useSelector((state) => state.user);
+
+  const generateInitialsAvatar = (name) => {
+    if (!name) return "/default-avatar.png"; // Fallback to a static default if name is unavailable
+
+    const initials = name
+      .split(" ")
+      .map((word) => word[0].toUpperCase())
+      .join("");
+
+    // Generate SVG placeholder
+    const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+      <rect width="100" height="100" fill="${getRandomColor()}" />
+      <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="50">
+        ${initials}
+      </text>
+    </svg>
+  `;
+
+    return `data:image/svg+xml;base64,${btoa(svg)}`;
+  };
+
+  const getRandomColor = () => {
+    const colors = [
+      "#FF5733",
+      "#33A2FF",
+      "#FF33D1",
+      "#4CAF50",
+      "#FF9800",
+      "#03A9F4",
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
   const dispatch = useDispatch();
 
   const [file, setFile] = useState(undefined);
   const [filePercentage, setFilePercentage] = useState(0);
   const [fileUploadError, setFileUploadError] = useState(null);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    username: currentUser?.username || "",
+    email: currentUser?.email || "",
+    avatar:
+      currentUser?.avatar || generateInitialsAvatar(currentUser?.username),
+  });
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [showListingsError, setShowListingsError] = useState(false);
   const [userListings, setUserListings] = useState([]);
@@ -102,29 +141,51 @@ export default function Profile() {
     }
   }, [file]);
 
+  // useEffect(() => {
+  //   if (currentUser) {
+  //     setFormData({
+  //       username: currentUser.username,
+  //       email: currentUser.email,
+  //       avatar: currentUser.avatar,
+  //     });
+  //   }
+  // }, [currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      setFormData((prev) => ({
+        ...prev,
+        avatar:
+          currentUser.avatar || generateInitialsAvatar(currentUser.username),
+      }));
+    }
+  }, [currentUser]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    //console.log("Form submitted");
+
     dispatch(updateUserStart());
-    //console.log("Loading state set to true");
+
     try {
       const response = await fetch(
         `/api/v1/user/update-user/${currentUser._id}`,
         {
-          method: "POST",
+          method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         }
       );
 
       const data = await response.json();
+      console.log("Data:", data);
       if (!data.success) throw new Error(data.message);
-      //console.log("Data fetched successfully:", data);
-      dispatch(updateUserSuccess({ data: data.data }));
+
+      dispatch(updateUserSuccess(data.data));
+      console.log("User updated successfully:", updateUserSuccess(data));
       setUpdateSuccess(true);
     } catch (error) {
       dispatch(updateUserFailure(error.message));
@@ -207,7 +268,7 @@ export default function Profile() {
         />
         <img
           onClick={() => fileRef.current.click()}
-          src={formData.avatar || currentUser?.avatar || "/default-avatar.png"}
+          src={formData.avatar}
           alt="profile"
           className="rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2"
         />
@@ -239,7 +300,7 @@ export default function Profile() {
         <input
           type="text"
           placeholder="Username"
-          defaultValue={currentUser?.username}
+          value={formData.username}
           id="username"
           className="border p-3 rounded-lg"
           onChange={handleChange}
@@ -248,7 +309,7 @@ export default function Profile() {
           type="email"
           placeholder="Email"
           id="email"
-          defaultValue={currentUser?.email}
+          value={formData.email}
           className="border p-3 rounded-lg"
           onChange={handleChange}
         />
@@ -262,7 +323,6 @@ export default function Profile() {
         <button
           type="submit"
           disabled={loading}
-          //className="bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80"
           className={`bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80 ${
             loading ? "cursor-not-allowed" : ""
           }`}
@@ -276,6 +336,14 @@ export default function Profile() {
           Create Listing
         </Link>
       </form>
+
+      {updateSuccess && (
+        <p className="text-green-700 mt-3 text-center">
+          Profile updated successfully!
+        </p>
+      )}
+      {error && <p className="text-red-500 mt-3 text-center">Error: {error}</p>}
+
       <div className="flex justify-between mt-5 ">
         <span
           onClick={handleDeleteUser}
@@ -301,7 +369,7 @@ export default function Profile() {
         Show Listings
       </button>
       <p className="text-red-700 mt-5 text-center">
-        {showListingsError && "Error showing listings"}
+        {showListingsError && "No Listings Found"}
       </p>
       {userListings && userListings.length > 0 && (
         <div className="flex flex-col gap-4">

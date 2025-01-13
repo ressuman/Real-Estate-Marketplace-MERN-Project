@@ -90,10 +90,96 @@ export const signin = async (req, res, next) => {
   }
 };
 
+// export const google = async (req, res, next) => {
+//   try {
+//     const { email, name, photo } = req.body;
+
+//     // Validate input
+//     if (!email || !name || !photo) {
+//       const error = responseHandler(
+//         400,
+//         false,
+//         "Missing required fields: email, name, or photo"
+//       );
+//       return next(error);
+//     }
+
+//     console.log("Incoming request body:", { email, name, photo });
+
+//     // Check for existing user
+//     let user = await User.findOne({ email });
+//     if (user) {
+//       console.log("User found, generating token...");
+//       const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+//         expiresIn: "1d",
+//       });
+//       const { password, ...rest } = user._doc;
+
+//       const response = responseHandler(
+//         200,
+//         true,
+//         "User authenticated successfully",
+//         1,
+//         {
+//           user: rest,
+//           token,
+//         }
+//       );
+//       return res
+//         .cookie("access_token", token, { httpOnly: true })
+//         .status(response.statusCode)
+//         .json(response);
+//     }
+
+//     // New user registration
+//     // Generate a secure random password
+//     const generatedPassword = crypto.randomBytes(16).toString("hex");
+//     console.log("Generated secure password:", generatedPassword);
+
+//     const hashedPassword = bcrypt.hashSync(generatedPassword, 10);
+
+//     // Create new user
+//     user = new User({
+//       username:
+//         name.split(" ").join("").toLowerCase() +
+//         Math.random().toString(36).slice(-4),
+//       email,
+//       password: hashedPassword,
+//       avatar: photo,
+//     });
+
+//     await newUser.save();
+//     console.log("New user saved successfully:", newUser);
+
+//     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
+//     const { password, ...rest } = newUser._doc;
+
+//     const response = responseHandler(
+//       200,
+//       true,
+//       "New user created successfully",
+//       1,
+//       {
+//         ...rest,
+//         token,
+//       }
+//     );
+//     return res
+//       .cookie("access_token", token, { httpOnly: true })
+//       .status(response.statusCode)
+//       .json(response);
+//   } catch (error) {
+//     console.error("Error in Google authentication:", error);
+//     const response = responseHandler(500, false, "Internal Server Error");
+//     return next(response);
+//   }
+// };
+
 export const google = async (req, res, next) => {
   try {
-    // Validate input
-    if (!req.body.email || !req.body.name || !req.body.photo) {
+    const { email, name, photo } = req.body;
+
+    if (!email || !name || !photo) {
       const error = responseHandler(
         400,
         false,
@@ -102,13 +188,15 @@ export const google = async (req, res, next) => {
       return next(error);
     }
 
-    console.log("Incoming request body:", req.body);
+    console.log("Incoming request body:", { email, name, photo });
 
     // Check for existing user
-    const user = await User.findOne({ email: req.body.email });
+    let user = await User.findOne({ email });
     if (user) {
       console.log("User found, generating token...");
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "1d",
+      });
       const { password, ...rest } = user._doc;
 
       const response = responseHandler(
@@ -117,37 +205,37 @@ export const google = async (req, res, next) => {
         "User authenticated successfully",
         1,
         {
-          ...rest,
+          user: rest,
           token,
         }
       );
+
       return res
         .cookie("access_token", token, { httpOnly: true })
         .status(response.statusCode)
         .json(response);
     }
 
-    // Generate a secure random password
+    // New user registration
     const generatedPassword = crypto.randomBytes(16).toString("hex");
-    console.log("Generated secure password:", generatedPassword);
+    const hashedPassword = await bcrypt.hash(generatedPassword, 10);
 
-    const hashedPassword = bcrypt.hashSync(generatedPassword, 10);
-
-    // Create new user
-    const newUser = new User({
+    user = new User({
       username:
-        req.body.name.split(" ").join("").toLowerCase() +
+        name.split(" ").join("").toLowerCase() +
         Math.random().toString(36).slice(-4),
-      email: req.body.email,
+      email,
       password: hashedPassword,
-      avatar: req.body.photo,
+      avatar: photo,
     });
 
-    await newUser.save();
-    console.log("New user saved successfully:", newUser);
+    await user.save();
+    console.log("New user created:", user);
 
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
-    const { password, ...rest } = newUser._doc;
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+    const { password: _, ...rest } = user._doc;
 
     const response = responseHandler(
       200,
@@ -155,10 +243,11 @@ export const google = async (req, res, next) => {
       "New user created successfully",
       1,
       {
-        ...rest,
+        user: rest,
         token,
       }
     );
+
     return res
       .cookie("access_token", token, { httpOnly: true })
       .status(response.statusCode)

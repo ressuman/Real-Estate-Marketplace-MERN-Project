@@ -10,7 +10,9 @@ import OAuth from "../components/OAuth";
 
 export default function Signin() {
   const [formData, setFormData] = useState({});
+
   const { loading, error } = useSelector((state) => state.user);
+  console.log(formData);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -47,16 +49,19 @@ export default function Signin() {
       }
 
       const data = await res.json();
-
       console.log("API Response Data:", data);
+
       if (!data.success) {
         dispatch(signInFailure(data.message));
         return;
       }
 
+      const { user, token } = data.data;
+
       // Success case
-      dispatch(signInSuccess({ data: data.data }));
-      console.log("User successfully signed in:", data.data);
+      dispatch(signInSuccess({ user, token }));
+      console.log("User successfully signed in:", user);
+
       navigate("/");
     } catch (error) {
       console.error("Sign-In Error:", error);
@@ -93,7 +98,7 @@ export default function Signin() {
       </form>
       <div className="flex gap-2 mt-5">
         <p>Don&apos;t have an account?</p>
-        <Link to={"/sign-up"}>
+        <Link to="/sign-up">
           <span className="text-blue-700 hover:underline">Sign up</span>
         </Link>
       </div>

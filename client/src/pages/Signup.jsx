@@ -3,61 +3,50 @@ import { Link, useNavigate } from "react-router-dom";
 import OAuth from "../components/OAuth";
 
 export default function Signup() {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  console.log(formData);
 
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setFormData((prevData) => ({
+      ...prevData,
       [e.target.id]: e.target.value,
-    });
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
     try {
-      setIsLoading(true);
-
-      // Log formData for debugging
-      console.log("FormData:", formData);
-
       const res = await fetch("/api/v1/auth/signup", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      console.log("API Response Status:", res.status);
+      const data = await res.json();
 
       if (!res.ok) {
-        const errorData = await res.json();
-        setError(errorData.message || "Something went wrong");
-        setIsLoading(false);
-        return;
+        throw new Error(data.message || "An error occurred.");
       }
 
-      const data = await res.json();
-      console.log("API Response Data:", data);
-      if (!data.success) {
-        setError(data.message);
-        setIsLoading(false);
-        return;
-      }
-
-      // Success case
       console.log("User successfully signed up:", data.data);
-      setIsLoading(false);
-      setError(null);
+
+      // Redirect to sign-in page or another page
       navigate("/sign-in");
-    } catch (error) {
-      console.error("Sign-Up Error:", error);
-      setError(error.message || "Network error occurred");
+    } catch (err) {
+      console.error("Sign-Up Error:", err);
+      setError(err.message);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -73,6 +62,7 @@ export default function Signup() {
           id="username"
           required
           onChange={handleChange}
+          value={formData.username}
         />
         <input
           type="email"
@@ -81,6 +71,7 @@ export default function Signup() {
           id="email"
           required
           onChange={handleChange}
+          value={formData.email}
         />
         <input
           type="password"
@@ -89,6 +80,7 @@ export default function Signup() {
           id="password"
           required
           onChange={handleChange}
+          value={formData.password}
         />
 
         <button
@@ -96,17 +88,19 @@ export default function Signup() {
           disabled={isLoading}
           className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80"
         >
-          {isLoading ? "Loading..." : "Sign Up"}
+          {isLoading ? "Creating Account..." : "Sign Up"}
         </button>
         <OAuth />
       </form>
+
+      {error && <p className="text-red-500 mt-5">{error}</p>}
+
       <div className="flex gap-2 mt-5">
-        <p>Have an account?</p>
-        <Link to={"/sign-in"}>
+        <p>Already have an account?</p>
+        <Link to="/sign-in">
           <span className="text-blue-700 hover:underline">Sign In</span>
         </Link>
       </div>
-      {error && <p className="text-red-500 mt-5">{error}</p>}
     </div>
   );
 }
