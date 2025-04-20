@@ -168,7 +168,7 @@ export const updateProfilePic = async (req, res, next) => {
 
     // Upload image to Cloudinary
     const uploadedImage = await cloudinary.uploader.upload(image, {
-      folder: "ressuman-mern-realestate-marketplace-abodeconnect-image-storage",
+      folder: "mern-real-estate-marketplace-abodeconnect/products-images",
       transformation: { width: 300, height: 300, crop: "fill" },
     });
 

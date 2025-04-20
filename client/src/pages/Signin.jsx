@@ -56,10 +56,12 @@ export default function Signin() {
         return;
       }
 
-      const { user, token } = data.data;
+      //const { user, token } = data.data;
+      const { user } = data.data;
 
       // Success case
-      dispatch(signInSuccess({ user, token }));
+      dispatch(signInSuccess({ user }));
+      //dispatch(signInSuccess({ user, token }));
       console.log("User successfully signed in:", user);
 
       navigate("/");

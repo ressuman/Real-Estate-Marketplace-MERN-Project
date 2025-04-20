@@ -115,7 +115,8 @@ export default function Search() {
 
         const data = await response.json();
         const res = data.data;
-
+        console.log(res);
+        console.log(data);
         setShowMore(res.length > 8);
         setListings(res);
       } catch (error) {

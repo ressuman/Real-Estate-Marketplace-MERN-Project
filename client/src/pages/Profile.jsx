@@ -71,7 +71,7 @@ export default function Profile() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("upload_preset", "ressuman_upload_preset"); // Replace with your preset name
+      formData.append("upload_preset", "abodeconnect_estate"); // Replace with your preset name
       formData.append("cloud_name", "dljydeppw"); // Replace with your Cloudinary cloud name
 
       // const response = await fetch(

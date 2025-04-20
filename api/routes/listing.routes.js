@@ -5,8 +5,10 @@ import { verifyToken } from "../utils/verifyUser.js";
 import {
   createListing,
   deleteListing,
+  getAllListings,
   getListing,
   getListings,
+  getSaleListings,
   updateListing,
 } from "../controllers/listing.controllers.js";
 
@@ -21,5 +23,9 @@ router.delete("/delete-listing/:id", verifyToken, deleteListing);
 router.get("/get-all-listings", getListings);
 
 router.get("/get-listing/:id", getListing);
+
+router.get("/all-listings", getAllListings);
+
+router.get("/full-sale-listings", getSaleListings);
 
 export default router;

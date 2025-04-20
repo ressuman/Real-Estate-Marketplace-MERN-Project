@@ -2,7 +2,8 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import path from "path";
+import morgan from "morgan";
+//import path from "path";
 //import swaggerUi from "swagger-ui-express";
 import dotenv from "dotenv";
 
@@ -54,14 +55,15 @@ process.on("SIGINT", async () => {
   }
 });
 
-const PORT = process.env.PORT_NUMBER || 3320;
-const HOST = process.env.PORT_HOST || "localhost";
+const PORT = process.env.PORT || 3573;
 
-const __dirname = path.resolve();
+//const __dirname = path.resolve();
 
 const app = express();
 
 // Middlewares
+app.use(morgan("combined"));
+
 app.use(cors());
 
 app.use(express.json());
@@ -99,16 +101,16 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/listings", listingRoutes);
 
-app.use(express.static(path.join(__dirname, "/client/dist")));
+//app.use(express.static(path.join(__dirname, "/client/dist")));
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
-});
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
+// });
 
 // Server Running
-app.listen(PORT, HOST, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(
-    `Server is running: Listening to requests at http://${HOST}:${PORT}`
+    `Server is running: Listening to requests at http://0.0.0.0:${PORT}`
   );
 });
 

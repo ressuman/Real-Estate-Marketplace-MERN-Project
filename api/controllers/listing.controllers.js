@@ -382,3 +382,80 @@ export const getListings = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getAllListings = async (req, res, next) => {
+  try {
+    const limit = Math.max(1, parseInt(req.query.limit) || 9);
+    const startIndex = Math.max(0, parseInt(req.query.startIndex) || 0);
+
+    const sortField = req.query.sort || "createdAt";
+    const sortOrder = req.query.order === "asc" ? 1 : -1;
+
+    const [listings, totalCount] = await Promise.all([
+      Listing.find()
+        .sort({ [sortField]: sortOrder })
+        .limit(limit)
+        .skip(startIndex),
+      Listing.countDocuments(),
+    ]);
+
+    res
+      .status(200)
+      .json(
+        responseHandler(
+          200,
+          true,
+          "All listings retrieved successfully!",
+          totalCount,
+          listings
+        )
+      );
+  } catch (error) {
+    next(responseHandler(500, false, error.message));
+  }
+};
+
+export const getSaleListings = async (req, res, next) => {
+  try {
+    const limit = Math.max(1, parseInt(req.query.limit) || 9);
+    const startIndex = Math.max(0, parseInt(req.query.startIndex) || 0);
+
+    //const query = { transactionType: "sale" };
+
+    const query = {
+      transactionType: "sale",
+      ...(req.query.offer === "true" && { offer: true }),
+      ...(req.query.furnished === "true" && { furnished: true }),
+      ...(req.query.parking === "true" && { parking: true }),
+      ...(req.query.propertyType && { propertyType: req.query.propertyType }),
+      ...(req.query.searchTerm && {
+        name: { $regex: req.query.searchTerm, $options: "i" },
+      }),
+    };
+
+    const sortField = req.query.sort || "createdAt";
+    const sortOrder = req.query.order === "asc" ? 1 : -1;
+
+    const [listings, totalCount] = await Promise.all([
+      Listing.find(query)
+        .sort({ [sortField]: sortOrder })
+        .limit(limit)
+        .skip(startIndex),
+      Listing.countDocuments(query),
+    ]);
+
+    res
+      .status(200)
+      .json(
+        responseHandler(
+          200,
+          true,
+          "Sale listings retrieved successfully!",
+          totalCount,
+          listings
+        )
+      );
+  } catch (error) {
+    next(responseHandler(500, false, error.message));
+  }
+};

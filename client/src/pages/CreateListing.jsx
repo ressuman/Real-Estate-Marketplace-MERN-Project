@@ -80,7 +80,7 @@ export default function CreateListing() {
     return new Promise((resolve, reject) => {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("upload_preset", "ressuman_upload_preset");
+      formData.append("upload_preset", "abodeconnect_estate");
       formData.append("cloud_name", "dljydeppw");
 
       const xhr = new XMLHttpRequest();
@@ -275,7 +275,7 @@ export default function CreateListing() {
             placeholder="Title"
             className="border p-3 rounded-lg"
             id="title"
-            maxLength="62"
+            maxLength="100"
             minLength="10"
             required
             onChange={handleChange}
