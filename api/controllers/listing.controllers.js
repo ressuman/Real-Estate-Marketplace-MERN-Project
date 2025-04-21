@@ -228,161 +228,6 @@ export const getListing = async (req, res, next) => {
   }
 };
 
-// export const getListings = async (req, res, next) => {
-//   try {
-//     const limit = Math.max(1, parseInt(req.query.limit) || 9); // Default to 9, min 1
-//     const startIndex = Math.max(0, parseInt(req.query.startIndex) || 0); // Default to 0, min 0
-
-//     const query = {
-//       name: {
-//         $regex: req.query.searchTerm || "",
-//         $options: "i",
-//       },
-//       ...(req.query.offer
-//         ? {
-//             offer: req.query.offer === "true",
-//           }
-//         : {}),
-//       ...(req.query.furnished
-//         ? {
-//             furnished: req.query.furnished === "true",
-//           }
-//         : {}),
-//       ...(req.query.parking
-//         ? {
-//             parking: req.query.parking === "true",
-//           }
-//         : {}),
-//       ...(req.query.transactionType && req.query.transactionType !== "all"
-//         ? { transactionType: req.query.transactionType }
-//         : {
-//             transactionType: {
-//               $in: ["sale", "rent", "lease", "short-term", "long-term"],
-//             },
-//           }),
-//       ...(req.query.propertyType && req.query.propertyType !== "all"
-//         ? { propertyType: req.query.propertyType }
-//         : {
-//             propertyType: {
-//               $in: [
-//                 "apartment",
-//                 "house",
-//                 "studio",
-//                 "condo",
-//                 "villa",
-//                 "duplex",
-//                 "townhouse",
-//               ],
-//             },
-//           }),
-//     };
-
-//     const sortField = req.query.sort || "createdAt";
-//     const sortOrder = req.query.order === "asc" ? 1 : -1;
-
-//     const [listings, totalCount] = await Promise.all([
-//       Listing.find(query)
-//         .sort({ [sortField]: sortOrder })
-//         .limit(limit)
-//         .skip(startIndex),
-//       Listing.countDocuments(query),
-//     ]);
-
-//     res
-//       .status(200)
-//       .json(
-//         responseHandler(
-//           200,
-//           true,
-//           "Listings retrieved successfully!",
-//           totalCount,
-//           listings
-//         )
-//       );
-//   } catch (error) {
-//     if (error instanceof mongoose.Error.CastError) {
-//       return next(
-//         responseHandler(400, false, "Invalid query parameter format.")
-//       );
-//     }
-//     next(error);
-//   }
-// };
-
-export const getListings = async (req, res, next) => {
-  try {
-    const limit = Math.max(1, parseInt(req.query.limit) || 9); // Default to 9, min 1
-    const startIndex = Math.max(0, parseInt(req.query.startIndex) || 0); // Default to 0, min 0
-
-    // Build the query object dynamically
-    const query = {
-      name: {
-        $regex: req.query.searchTerm || "",
-        $options: "i",
-      },
-      ...(req.query.offer === "true" ? { offer: true } : {}),
-      ...(req.query.furnished === "true" ? { furnished: true } : {}),
-      ...(req.query.parking === "true" ? { parking: true } : {}),
-      ...(req.query.transactionType && req.query.transactionType !== "all"
-        ? { transactionType: req.query.transactionType }
-        : {
-            transactionType: {
-              $in: ["sale", "rent", "lease", "short-term", "long-term"],
-            },
-          }),
-      ...(req.query.propertyType && req.query.propertyType !== "all"
-        ? { propertyType: req.query.propertyType }
-        : {
-            propertyType: {
-              $in: [
-                "apartment",
-                "house",
-                "studio",
-                "condo",
-                "villa",
-                "duplex",
-                "townhouse",
-              ],
-            },
-          }),
-    };
-
-    // Sorting logic
-    const sortField = req.query.sort || "createdAt";
-    const sortOrder = req.query.order === "asc" ? 1 : -1;
-
-    // Fetch listings and total count concurrently
-    const [listings, totalCount] = await Promise.all([
-      Listing.find(query)
-        .sort({ [sortField]: sortOrder })
-        .limit(limit)
-        .skip(startIndex),
-      Listing.countDocuments(query),
-    ]);
-
-    res
-      .status(200)
-      .json(
-        responseHandler(
-          200,
-          true,
-          "Listings retrieved successfully!",
-          totalCount,
-          listings
-        )
-      );
-  } catch (error) {
-    // Handle specific MongoDB errors
-    if (error instanceof mongoose.Error.CastError) {
-      return next(
-        responseHandler(400, false, "Invalid query parameter format.")
-      );
-    }
-    // Pass other errors to the global error handler
-    next(error);
-  }
-};
-
 export const getAllListings = async (req, res, next) => {
   try {
     const limit = Math.max(1, parseInt(req.query.limit) || 9);
@@ -516,6 +361,95 @@ export const getHomepageListings = async (req, res, next) => {
       )
     );
   } catch (error) {
+    next(responseHandler(500, false, error.message));
+  }
+};
+
+export const getListings = async (req, res, next) => {
+  try {
+    // Pagination
+    const limit = Math.max(1, parseInt(req.query.limit) || 9);
+    const startIndex = Math.max(0, parseInt(req.query.startIndex) || 0);
+
+    // Build query object dynamically
+    const query = {
+      ...(req.query.searchTerm?.trim() && {
+        $or: [
+          {
+            title: {
+              $regex: req.query.searchTerm,
+              $options: "i",
+            },
+          },
+          {
+            description: {
+              $regex: req.query.searchTerm,
+              $options: "i",
+            },
+          },
+          {
+            address: {
+              $regex: req.query.searchTerm,
+              $options: "i",
+            },
+          },
+        ],
+      }),
+      ...(req.query.propertyType &&
+        req.query.propertyType !== "all" && {
+          propertyType: req.query.propertyType,
+        }),
+      ...(req.query.transactionType &&
+        req.query.transactionType !== "all" && {
+          transactionType: req.query.transactionType,
+        }),
+      ...(req.query.offer === "true" && {
+        offer: true,
+      }),
+      ...(req.query.furnished === "true" && {
+        furnished: true,
+      }),
+      ...(req.query.parking === "true" && {
+        parking: true,
+      }),
+    };
+
+    // Sorting
+    const sortField = req.query.sort || "createdAt";
+    const sortOrder = req.query.order === "asc" ? 1 : -1;
+    const sort = { [sortField]: sortOrder };
+
+    // Fetch listings and total count
+    const [listings, totalCount] = await Promise.all([
+      Listing.find(query).sort(sort).skip(startIndex).limit(limit),
+      Listing.countDocuments(query),
+    ]);
+
+    const remaining = Math.max(totalCount - (startIndex + limit), 0);
+
+    // Success Response with pagination info
+    res.status(200).json(
+      responseHandler(
+        200,
+        true,
+        "Listings retrieved successfully!",
+        {
+          total: totalCount,
+          returned: listings.length,
+          //remaining: Math.max(totalCount - (startIndex + listings.length), 0),
+          remaining: remaining,
+          hasMore: totalCount - (startIndex + limit) > 0,
+        },
+        listings
+      )
+    );
+  } catch (error) {
+    // Error handling
+    if (error instanceof mongoose.Error.CastError) {
+      return next(
+        responseHandler(400, false, "Invalid query parameter format")
+      );
+    }
     next(responseHandler(500, false, error.message));
   }
 };

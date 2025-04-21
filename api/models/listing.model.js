@@ -104,6 +104,9 @@ listingSchema.index({ address: 1, type: 1, userRef: 1 });
 listingSchema.index({ transactionType: 1, createdAt: -1 });
 listingSchema.index({ offer: 1, createdAt: -1 });
 listingSchema.index({ furnished: 1, createdAt: -1 });
+listingSchema.index({ title: "text", description: "text", address: "text" });
+listingSchema.index({ regularPrice: 1 });
+listingSchema.index({ createdAt: 1 });
 
 const Listing = mongoose.model("Listing", listingSchema);
 

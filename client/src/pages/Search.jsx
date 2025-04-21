@@ -1,14 +1,18 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { titleCase } from "../helper/unit";
 import { useEffect, useState } from "react";
 import ListingItem from "../components/ListingItem";
+import { buildSearchParams } from "../helper/search";
 
 export default function Search() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [loading, setLoading] = useState(false);
   const [listings, setListings] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [showMore, setShowMore] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState({
     searchTerm: "",
@@ -21,171 +25,109 @@ export default function Search() {
     order: "desc",
   });
 
+  // Handle form input changes
   const handleChange = (e) => {
     const { id, name, value, checked } = e.target;
-
     setSearchQuery((prev) => {
-      let updatedQuery = { ...prev };
-
-      // Handle 'searchTerm'
+      const updated = { ...prev };
       if (id === "searchTerm") {
-        updatedQuery.searchTerm = value;
+        updated.searchTerm = value;
       }
-
-      // Handle 'propertyType'
       if (id === "propertyType") {
-        updatedQuery.propertyType = value;
+        updated.propertyType = value;
       }
-
-      // Handle 'transactionType' (radio buttons)
       if (name === "transactionType") {
-        updatedQuery.transactionType = value;
+        updated.transactionType = value;
       }
-
-      // Handle 'amenities' (checkboxes for dynamic IDs)
-      // Handle 'parking', 'furnished', and 'offer' (checkboxes)
-      if (id === "parking" || id === "furnished" || id === "offer") {
-        updatedQuery[id] = checked;
+      if (["parking", "furnished", "offer"].includes(id)) {
+        updated[id] = checked;
       }
-
-      // Handle 'sort_order' (dropdown)
       if (id === "sort_order") {
-        const [sort = "created_at", order = "desc"] = value.split("_");
-        updatedQuery.sort = sort;
-        updatedQuery.order = order;
+        const [sort = "createdAt", order = "desc"] = value.split("_");
+        updated.sort = sort;
+        updated.order = order;
       }
-
-      return updatedQuery;
+      return updated;
     });
   };
 
+  // Update URL when searchQuery changes
   useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
+    const params = buildSearchParams(searchQuery);
 
-    // Helper function to parse boolean values
-    const parseBoolean = (value) => value === "true";
+    navigate(`/search?${params}`, { replace: true });
+  }, [searchQuery, navigate]);
 
-    // Extract URL parameters
-    const searchTermFromUrl = urlParams.get("searchTerm") || "";
-    const propertyTypeFromUrl = urlParams.get("propertyType") || "all";
-    const transactionTypeFromUrl = urlParams.get("transactionType") || "all";
-    const parkingFromUrl = parseBoolean(urlParams.get("parking"));
-    const furnishedFromUrl = parseBoolean(urlParams.get("furnished"));
-    const offerFromUrl = parseBoolean(urlParams.get("offer"));
-    const sortFromUrl = urlParams.get("sort") || "created_at";
-    const orderFromUrl = urlParams.get("order") || "desc";
-
-    // Update the state if any URL parameter exists
-    if (
-      searchTermFromUrl ||
-      propertyTypeFromUrl ||
-      transactionTypeFromUrl ||
-      parkingFromUrl ||
-      furnishedFromUrl ||
-      offerFromUrl ||
-      sortFromUrl ||
-      orderFromUrl
-    ) {
-      setSearchQuery({
-        searchTerm: searchTermFromUrl,
-        propertyType: propertyTypeFromUrl,
-        transactionType: transactionTypeFromUrl,
-        parking: parkingFromUrl,
-        furnished: furnishedFromUrl,
-        offer: offerFromUrl,
-        sort: sortFromUrl,
-        order: orderFromUrl,
-      });
-    }
-
-    // Fetch listings
+  // Fetch listings on location.search change
+  useEffect(() => {
     const fetchListings = async () => {
       try {
         setLoading(true);
-        setShowMore(false);
+        const limit = showAll ? 10000 : 9;
+        const queryParams = `${location.search}&limit=${limit}`;
 
-        const searchQuery = urlParams.toString();
         const response = await fetch(
-          `/api/v1/listings/get-all-listings?${searchQuery}`
+          `/api/v1/listings/get-all-listings${queryParams}`
         );
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch listings: ${response.status}`);
-        }
-
         const data = await response.json();
-        const res = data.data;
-        console.log(res);
-        console.log(data);
-        setShowMore(res.length > 8);
-        setListings(res);
-      } catch (error) {
-        console.error("Error fetching listings:", error);
+
+        if (data.success) {
+          setListings(data.data);
+          //setTotalCount(data.meta?.total || 0);
+          //setShowMore(data.meta?.remaining > 0);
+          setTotalCount(data.count?.total || 0);
+          setShowMore(!showAll && data.count?.remaining > 0);
+        }
+      } catch (err) {
+        console.error("Fetch failed:", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchListings();
-  }, [location.search]);
+  }, [location.search, showAll]);
 
+  // Manual submit
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const urlParams = new URLSearchParams();
+    setShowAll(false); // reset showAll state
 
-    // Only add parameters to the URL if they are not default values
-    if (searchQuery.searchTerm) {
-      urlParams.set("searchTerm", searchQuery.searchTerm);
-    }
-    if (searchQuery.propertyType !== "all") {
-      urlParams.set("propertyType", searchQuery.propertyType);
-    }
-    if (searchQuery.transactionType !== "all") {
-      urlParams.set("transactionType", searchQuery.transactionType);
-    }
-    urlParams.set("parking", searchQuery.parking);
-    urlParams.set("furnished", searchQuery.furnished);
-    urlParams.set("offer", searchQuery.offer);
-    urlParams.set("sort", searchQuery.sort);
-    urlParams.set("order", searchQuery.order);
-
-    const searchQueryParams = urlParams.toString();
-
-    navigate(`/search?${searchQueryParams}`);
+    const query = buildSearchParams(searchQuery);
+    navigate(`/search?${query}`);
   };
 
+  // Show More Listings
   const onShowMoreClick = async () => {
-    try {
-      const numberOfListings = listings.length;
-      const startIndex = numberOfListings;
+    const startIndex = listings.length;
+    const limit = 9;
+    const params = buildSearchParams(searchQuery, { startIndex, limit });
 
-      // Add startIndex to existing search parameters
-      const urlParams = new URLSearchParams(location.search);
-      urlParams.set("startIndex", startIndex);
+    const response = await fetch(`/api/v1/listings/get-all-listings?${params}`);
+    const data = await response.json();
 
-      const searchQuery = urlParams.toString();
-      const response = await fetch(
-        `/api/v1/listings/get-all-listings?${searchQuery}`
-      );
+    if (data.success) {
+      setListings((prev) => [...prev, ...data.data]);
+      setShowMore(data.count?.remaining > 0);
+      setTotalCount(data.count?.total || 0);
+    }
+  };
 
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch additional listings: ${response.status}`
-        );
-      }
+  // const onShowAllClick = () => {
+  //   setShowAll(true);
+  // };
+  // Add onShowAllClick function
+  const onShowAllClick = async () => {
+    const params = buildSearchParams(searchQuery, { limit: 10000 });
 
-      const data = await response.json();
-      const newListings = data.data;
+    const response = await fetch(`/api/v1/listings/get-all-listings?${params}`);
+    const data = await response.json();
 
-      // Update "Show More" button visibility based on returned results
-      // Determine if "Show More" should remain visible
-      setShowMore(newListings.length >= 9);
-
-      // Append new listings to the existing list
-      setListings((prevListings) => [...prevListings, ...newListings]);
-    } catch (error) {
-      console.error("Error fetching more listings:", error);
+    if (data.success) {
+      setListings(data.data);
+      setTotalCount(data.count?.total || 0);
+      setShowMore(false);
+      setShowAll(true);
     }
   };
 
@@ -207,6 +149,7 @@ export default function Search() {
               placeholder="Search..."
               className="border rounded-lg p-3 w-full"
               value={searchQuery.searchTerm || ""}
+              //value={searchQuery.searchTerm}
               onChange={handleChange}
             />
           </div>
@@ -221,6 +164,7 @@ export default function Search() {
               id="propertyType"
               className="border p-3 rounded-lg"
               value={searchQuery.propertyType || "all"}
+              //value={searchQuery.propertyType}
               onChange={handleChange}
             >
               <option value="all">Select Type</option>
@@ -337,31 +281,59 @@ export default function Search() {
       {/* Listings Section */}
       <div className="w-full md:w-[60%] lg:w-[70%]">
         <h1 className="text-3xl font-semibold border-b p-3 text-slate-700 mt-5">
-          Listing results:
-        </h1>
-        <div className="p-7 flex flex-wrap gap-4">
-          {!loading && (!listings || listings.length === 0) && (
-            <p className="text-xl text-slate-700">No listing found!</p>
+          Listing results:{" "}
+          {totalCount > 0 && (
+            <span className="text-3xl font-bold ml-2">
+              ({listings.length} of {totalCount})
+            </span>
           )}
+        </h1>
+
+        <div className="p-7 flex flex-wrap gap-4">
           {loading && (
             <p className="text-xl text-slate-700 text-center w-full">
               Loading...
             </p>
           )}
+          {!loading && listings.length === 0 && (
+            <p className="text-xl text-slate-700">No listings found!</p>
+          )}
           {!loading &&
-            listings &&
             listings.map((listing) => (
               <ListingItem key={listing._id} listing={listing} />
             ))}
-          {showMore && (
+          {!showAll && showMore && (
+            <div className="w-full flex gap-4">
+              <button
+                onClick={onShowMoreClick}
+                className="text-green-700 hover:underline p-3 rounded-lg border border-green-700 flex-1"
+              >
+                Show More ({totalCount - listings.length} remaining)
+              </button>
+              <button
+                onClick={onShowAllClick}
+                className="text-blue-700 hover:underline p-3 rounded-lg border border-blue-700 flex-1"
+              >
+                Show All {totalCount} Listings
+              </button>
+            </div>
+          )}
+          {/* {showMore && (
             <button
-              type="button"
               onClick={onShowMoreClick}
               className="text-green-700 hover:underline p-7 text-center w-full"
             >
               Show more
             </button>
           )}
+          {!showAll && listings.length >= 9 && (
+            <button
+              onClick={onShowAllClick}
+              className="text-blue-700 hover:underline p-7 text-center w-full"
+            >
+              Show all listings
+            </button>
+          )} */}
         </div>
       </div>
     </div>
