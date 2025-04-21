@@ -10,6 +10,7 @@ import "swiper/css/scrollbar";
 import ListingItem from "../components/ListingItem";
 
 export default function Home() {
+  const [furnishedListings, setFurnishedListings] = useState([]);
   const [offerListings, setOfferListings] = useState([]);
   const [saleListings, setSaleListings] = useState([]);
   const [rentListings, setRentListings] = useState([]);
@@ -18,64 +19,89 @@ export default function Home() {
   const [longTermListings, setLongTermListings] = useState([]);
   const [error, setError] = useState(null);
 
+  // useEffect(() => {
+  //   const fetchListings = async () => {
+  //     try {
+  //       const [
+  //         offersRes,
+  //         rentRes,
+  //         saleRes,
+  //         leaseRes,
+  //         shortTermRes,
+  //         longTermRes,
+  //       ] = await Promise.all([
+  //         fetch("/api/v1/listings/get-all-listings?offer=true&limit=3"),
+  //         fetch(
+  //           "/api/v1/listings/get-all-listings?transactionType=rent&limit=3"
+  //         ),
+  //         fetch(
+  //           "/api/v1/listings/get-all-listings?transactionType=sale&limit=3"
+  //         ),
+  //         fetch(
+  //           "/api/v1/listings/get-all-listings?transactionType=lease&limit=3"
+  //         ),
+  //         fetch(
+  //           "/api/v1/listings/get-all-listings?transactionType=short-term&limit=3"
+  //         ),
+  //         fetch(
+  //           "/api/v1/listings/get-all-listings?transactionType=long-term&limit=3"
+  //         ),
+  //       ]);
+
+  //       const [
+  //         offersData,
+  //         rentData,
+  //         saleData,
+  //         leaseData,
+  //         shortTermData,
+  //         longTermData,
+  //       ] = await Promise.all([
+  //         offersRes.json(),
+  //         rentRes.json(),
+  //         saleRes.json(),
+  //         leaseRes.json(),
+  //         shortTermRes.json(),
+  //         longTermRes.json(),
+  //       ]);
+
+  //       setOfferListings(offersData.data);
+  //       setRentListings(rentData.data);
+  //       setSaleListings(saleData.data);
+  //       setLeaseListings(leaseData.data);
+  //       setShortTermListings(shortTermData.data);
+  //       setLongTermListings(longTermData.data);
+  //     } catch (err) {
+  //       setError("Failed to fetch listings");
+  //       console.error(err);
+  //     }
+  //   };
+
+  //   fetchListings();
+  // }, []);
+
+  // Replace your current useEffect with this optimized version
   useEffect(() => {
-    const fetchListings = async () => {
+    const fetchHomepageListings = async () => {
       try {
-        const [
-          offersRes,
-          rentRes,
-          saleRes,
-          leaseRes,
-          shortTermRes,
-          longTermRes,
-        ] = await Promise.all([
-          fetch("/api/v1/listings/get-all-listings?offer=true&limit=3"),
-          fetch(
-            "/api/v1/listings/get-all-listings?transactionType=rent&limit=3"
-          ),
-          fetch(
-            "/api/v1/listings/get-all-listings?transactionType=sale&limit=3"
-          ),
-          fetch(
-            "/api/v1/listings/get-all-listings?transactionType=lease&limit=3"
-          ),
-          fetch(
-            "/api/v1/listings/get-all-listings?transactionType=short-term&limit=3"
-          ),
-          fetch(
-            "/api/v1/listings/get-all-listings?transactionType=long-term&limit=3"
-          ),
-        ]);
+        const res = await fetch("/api/v1/listings/homepage-listings");
+        const data = await res.json();
 
-        const [
-          offersData,
-          rentData,
-          saleData,
-          leaseData,
-          shortTermData,
-          longTermData,
-        ] = await Promise.all([
-          offersRes.json(),
-          rentRes.json(),
-          saleRes.json(),
-          leaseRes.json(),
-          shortTermRes.json(),
-          longTermRes.json(),
-        ]);
-
-        setOfferListings(offersData.data);
-        setRentListings(rentData.data);
-        setSaleListings(saleData.data);
-        setLeaseListings(leaseData.data);
-        setShortTermListings(shortTermData.data);
-        setLongTermListings(longTermData.data);
+        if (data.success) {
+          setFurnishedListings(data.data.furnished);
+          setOfferListings(data.data.offers);
+          setRentListings(data.data.rentListings);
+          setSaleListings(data.data.saleListings);
+          setLeaseListings(data.data.leaseListings);
+          setShortTermListings(data.data.shortTermListings);
+          setLongTermListings(data.data.longTermListings);
+        }
       } catch (err) {
         setError("Failed to fetch listings");
         console.error(err);
       }
     };
 
-    fetchListings();
+    fetchHomepageListings();
   }, []);
 
   return (
@@ -109,7 +135,7 @@ export default function Home() {
       </div>
 
       {/* Swiper Section */}
-      {offerListings && offerListings?.length > 0 && (
+      {furnishedListings && furnishedListings?.length > 0 && (
         <Swiper
           modules={[Navigation, Pagination, Scrollbar, A11y]}
           navigation
@@ -120,7 +146,7 @@ export default function Home() {
           onSlideChange={() => console.log("slide change")}
           onSwiper={(swiper) => console.log(swiper)}
         >
-          {offerListings.map((listing) => (
+          {furnishedListings.map((listing) => (
             <SwiperSlide key={listing._id}>
               <div
                 style={{

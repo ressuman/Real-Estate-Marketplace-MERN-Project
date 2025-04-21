@@ -6,6 +6,7 @@ import {
   createListing,
   deleteListing,
   getAllListings,
+  getHomepageListings,
   getListing,
   getListings,
   getSaleListings,
@@ -27,5 +28,14 @@ router.get("/get-listing/:id", getListing);
 router.get("/all-listings", getAllListings);
 
 router.get("/full-sale-listings", getSaleListings);
+
+router.get(
+  "/homepage-listings",
+  (req, res, next) => {
+    res.set("Cache-Control", "public, max-age=300"); // 5 minute cache
+    next();
+  },
+  getHomepageListings
+);
 
 export default router;

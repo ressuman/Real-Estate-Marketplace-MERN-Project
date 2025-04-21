@@ -459,3 +459,63 @@ export const getSaleListings = async (req, res, next) => {
     next(responseHandler(500, false, error.message));
   }
 };
+
+export const getHomepageListings = async (req, res, next) => {
+  try {
+    // Helper function to fetch listings for each category
+    const fetchCategory = async (
+      query,
+      limit = 3,
+      sort = { createdAt: -1 }
+    ) => {
+      try {
+        return await Listing.find(query).sort(sort).limit(limit).exec();
+      } catch (error) {
+        console.error(
+          `Error fetching ${query.transactionType} listings:`,
+          error
+        );
+        return []; // Return empty array to prevent total failure
+      }
+    };
+
+    // Fetch all categories concurrently
+    const [
+      furnished,
+      offers,
+      rentListings,
+      saleListings,
+      leaseListings,
+      shortTermListings,
+      longTermListings,
+    ] = await Promise.all([
+      fetchCategory({ furnished: true }, 5), // Furnished listings
+      fetchCategory({ offer: true }), // Recent offers
+      fetchCategory({ transactionType: "rent" }),
+      fetchCategory({ transactionType: "sale" }),
+      fetchCategory({ transactionType: "lease" }),
+      fetchCategory({ transactionType: "short-term" }),
+      fetchCategory({ transactionType: "long-term" }),
+    ]);
+
+    res.status(200).json(
+      responseHandler(
+        200,
+        true,
+        "Homepage listings retrieved successfully!",
+        null,
+        {
+          furnished,
+          offers,
+          rentListings,
+          saleListings,
+          leaseListings,
+          shortTermListings,
+          longTermListings,
+        }
+      )
+    );
+  } catch (error) {
+    next(responseHandler(500, false, error.message));
+  }
+};

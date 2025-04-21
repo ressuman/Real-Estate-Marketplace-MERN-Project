@@ -15,7 +15,7 @@ export default function ListingItem({ listing }) {
   // Fallback for listing data if incomplete
   const {
     _id,
-    name = "No Title Available",
+    title = "No Title Available",
     address = "No Address Provided",
     description = "No Description Available",
     imageUrls = [],
@@ -58,12 +58,12 @@ export default function ListingItem({ listing }) {
             imageUrls[0] ||
             "https://53.fs1.hubspotusercontent-na1.net/hub/53/hubfs/Sales_Blog/real-estate-business-compressor.jpg?width=595&height=400&name=real-estate-business-compressor.jpg"
           }
-          alt={name}
+          alt={title}
           className="h-[320px] md:h-[220px] w-full object-cover hover:scale-105 transition-scale duration-300"
         />
         <div className="p-3 flex flex-col gap-2 w-full">
           <p className="truncate text-lg font-semibold text-slate-700">
-            {name}
+            {title}
           </p>
 
           <div className="flex items-center gap-1">
