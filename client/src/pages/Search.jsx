@@ -73,8 +73,7 @@ export default function Search() {
 
         if (data.success) {
           setListings(data.data);
-          //setTotalCount(data.meta?.total || 0);
-          //setShowMore(data.meta?.remaining > 0);
+
           setTotalCount(data.count?.total || 0);
           setShowMore(!showAll && data.count?.remaining > 0);
         }
@@ -113,9 +112,6 @@ export default function Search() {
     }
   };
 
-  // const onShowAllClick = () => {
-  //   setShowAll(true);
-  // };
   // Add onShowAllClick function
   const onShowAllClick = async () => {
     const params = buildSearchParams(searchQuery, { limit: 10000 });
@@ -318,22 +314,6 @@ export default function Search() {
               </button>
             </div>
           )}
-          {/* {showMore && (
-            <button
-              onClick={onShowMoreClick}
-              className="text-green-700 hover:underline p-7 text-center w-full"
-            >
-              Show more
-            </button>
-          )}
-          {!showAll && listings.length >= 9 && (
-            <button
-              onClick={onShowAllClick}
-              className="text-blue-700 hover:underline p-7 text-center w-full"
-            >
-              Show all listings
-            </button>
-          )} */}
         </div>
       </div>
     </div>

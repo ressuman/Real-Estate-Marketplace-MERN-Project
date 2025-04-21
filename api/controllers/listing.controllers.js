@@ -436,7 +436,6 @@ export const getListings = async (req, res, next) => {
         {
           total: totalCount,
           returned: listings.length,
-          //remaining: Math.max(totalCount - (startIndex + listings.length), 0),
           remaining: remaining,
           hasMore: totalCount - (startIndex + limit) > 0,
         },
