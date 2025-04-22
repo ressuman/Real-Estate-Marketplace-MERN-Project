@@ -13,19 +13,43 @@ export default function Header() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams();
     urlParams.set("searchTerm", searchTerm);
-
+    // Reset other filters when searching from header
+    urlParams.set("propertyType", "all");
+    urlParams.set("transactionType", "all");
+    urlParams.set("sort", "createdAt");
+    urlParams.set("order", "desc");
+    //navigate(`/search?${urlParams.toString()}`);
     const searchQuery = urlParams.toString();
     navigate(`/search?${searchQuery}`);
   };
+
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+
+  //   const urlParams = new URLSearchParams(window.location.search);
+  //   urlParams.set("searchTerm", searchTerm);
+
+  //   const searchQuery = urlParams.toString();
+  //   navigate(`/search?${searchQuery}`);
+  // };
+
+  // useEffect(() => {
+  //   const urlParams = new URLSearchParams(location.search);
+  //   const searchTermFromUrl = urlParams.get("searchTerm");
+  //   if (searchTermFromUrl) {
+  //     setSearchTerm(searchTermFromUrl);
+  //   }
+  // }, [location.search]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const searchTermFromUrl = urlParams.get("searchTerm");
     if (searchTermFromUrl) {
       setSearchTerm(searchTermFromUrl);
+    } else {
+      setSearchTerm(""); // Clear input when leaving search page
     }
   }, [location.search]);
 
@@ -47,7 +71,7 @@ export default function Header() {
         >
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Search properties..."
             className="bg-transparent focus:outline-none w-24 md:w-64"
             aria-label="Search"
             value={searchTerm}

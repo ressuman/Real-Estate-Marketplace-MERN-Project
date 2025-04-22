@@ -177,6 +177,12 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
+## Image
+
+Here is an expected gif/photos of the preview of the App(AbodeConnect - Real Estate Marketplace App)
+
+## ![AbodeConnect - Real Estate Marketplace App image](./image/abodeconnect-real-estate.png)
+
 ## Author
 
 **Richard Essuman**
